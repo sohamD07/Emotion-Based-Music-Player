@@ -1,0 +1,35 @@
+trigger:
+- main  # Adjust to your branch name
+
+pool:
+  vmImage: 'ubuntu-latest'  # Use 'windows-latest', 'macos-latest', or 'ubuntu-latest'
+
+variables:
+  flutterVersion: '3.10.0'  # Specify the Flutter version
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'  # Install Python, required for Flutter
+
+# Install Flutter
+- script: |
+    git clone https://github.com/flutter/flutter.git --branch ${flutterVersion} --depth 1
+    echo '##vso[task.prependpath]$(Pipeline.Workspace)/flutter/bin'
+    flutter doctor
+  displayName: 'Install Flutter'
+
+# Install Dependencies
+- script: flutter pub get
+  displayName: 'Install Dependencies'
+
+# Build APK
+- script: flutter build apk --release
+  displayName: 'Build APK'
+
+# Publish APK Artifact
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: 'build/app/outputs/flutter-apk/app-release.apk'
+    artifact: 'FlutterAPK'
+    publishLocation: 'pipeline'
